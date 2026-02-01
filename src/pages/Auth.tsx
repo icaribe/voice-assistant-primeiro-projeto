@@ -1,12 +1,10 @@
-
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -25,6 +23,9 @@ const Auth = () => {
         ? await supabase.auth.signUp({
             email,
             password,
+            options: {
+              emailRedirectTo: window.location.origin,
+            },
           })
         : await supabase.auth.signInWithPassword({
             email,
@@ -37,10 +38,12 @@ const Auth = () => {
         toast({
           title: isSignUp ? "Conta criada com sucesso!" : "Login realizado com sucesso!",
           description: isSignUp
-            ? "Você já pode fazer login com suas credenciais."
+            ? "Verifique seu email para confirmar sua conta."
             : "Bem-vindo de volta!",
         });
-        navigate("/");
+        if (!isSignUp) {
+          navigate("/");
+        }
       }
     } catch (error) {
       console.error("Erro de autenticação:", error);
@@ -55,7 +58,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{isSignUp ? "Criar Conta" : "Login"}</CardTitle>
@@ -98,14 +101,23 @@ const Auth = () => {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Carregando..." : isSignUp ? "Criar Conta" : "Entrar"}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "Já tem uma conta? Entre" : "Não tem uma conta? Cadastre-se"}
-            </Button>
+            <div className="flex flex-col space-y-2 w-full">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setIsSignUp(!isSignUp)}
+              >
+                {isSignUp ? "Já tem uma conta? Entre" : "Não tem uma conta? Cadastre-se"}
+              </Button>
+              {!isSignUp && (
+                <Link to="/forgot-password" className="w-full">
+                  <Button type="button" variant="link" className="w-full text-muted-foreground">
+                    Esqueceu sua senha?
+                  </Button>
+                </Link>
+              )}
+            </div>
           </CardFooter>
         </form>
       </Card>
